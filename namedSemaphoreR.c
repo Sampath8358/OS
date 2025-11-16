@@ -1,0 +1,28 @@
+#include <stdio.h>
+#include <sys/mman.h>
+#include <sys/stat.h> 
+#include <fcntl.h>
+#include <semaphore.h>
+#include <string.h>
+#include <unistd.h>
+
+#define SHM_NAME "/my_shm"
+#define SEM_NAME "/my_sem"
+#define SIZE 1024
+
+int main(){
+
+    int fd = shm_open(SHM_NAME, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+    ftruncate(fd,SIZE);
+    char *ptr = (char*)mmap(NULL, SIZE, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    sem_t *sem = sem_open(SEM_NAME,0);
+
+    printf("waiting for the data...\n");
+
+    sem_post(sem);
+
+    printf("data: %s\n",ptr);
+
+    munmap(ptr,SIZE);
+    close(fd);
+}
